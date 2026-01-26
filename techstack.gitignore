@@ -1,0 +1,6 @@
+database.database
+__pycache__/
+*.pyc
+.env
+.venv/
+.vscode/
