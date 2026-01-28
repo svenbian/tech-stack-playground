@@ -30,6 +30,27 @@ def get_users():
         return [dict(user) for user in users]
     except sqlite3.Error as e:
         raise HHTPException(status_code=500, detail=f"Database query error: {e}")
+    
+@app.get("/users/search")
+def search_user(email: str):
+    try:
+        conn = get_db_connection()
+        user = conn.execute(
+            "SELECT * FROM users WHERE email = ?",
+            (email, )
+        ).fetchone()
+        conn.close()
+
+        if user is None:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        return dict(user)
+
+    except sqlite3.Error as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Database query error: {e}"
+        )     
 
 @app.get("/users/{user_id}")
 def get_user(user_id: int):
@@ -56,3 +77,4 @@ def get_user_count():
         return {"count": row["count"]}
     except sqlite3.Error as e:
         raise HTTPException(status_code=500, detail=f"Database query error: {e}")
+       
