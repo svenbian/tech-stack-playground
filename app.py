@@ -31,15 +31,21 @@ def get_users():
     except sqlite3.Error as e:
         raise HHTPException(status_code=500, detail=f"Database query error: {e}")
 
-@app.get("/users/{user.id}")
+@app.get("/users/{user_id}")
 def get_user(user_id: int):
-        conn = get_db_connection()
-        user = conn.execute("SELECT * FROM users WHERE     ID = ?", (user_id,)).fetchone()
-        conn.close()
-        if user is None:
+     try:
+         conn = get_db_connection()
+         user = conn.execute("SELECT * FROM users WHERE     ID = ?", (user_id,)).fetchone()
+         conn.close()
+         if user is None:
            raise HTTPException(status_code=404, detail="User not found")
     
-        return dict(user)
+         return dict(user)
+     except sqlite3.Error as e:
+         raise HTTPException(
+             status_code=500,
+             detail=f"Database query error: {e}"
+         )
 
 @app.get("/users/count")
 def get_user_count():
