@@ -1,4 +1,5 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
+from pydantic import EmailStr
 import sqlite3
 
 app = FastAPI()
@@ -32,12 +33,12 @@ def get_users():
         raise HHTPException(status_code=500, detail=f"Database query error: {e}")
     
 @app.get("/users/search")
-def search_user(email: str):
+def search_user(email: EmailStr = Query(..., description="User email to search for")):
     try:
         conn = get_db_connection()
         user = conn.execute(
             "SELECT * FROM users WHERE email = ?",
-            (email, )
+            (str(email),)
         ).fetchone()
         conn.close()
 
@@ -51,6 +52,17 @@ def search_user(email: str):
             status_code=500,
             detail=f"Database query error: {e}"
         )     
+
+@app.get("/users/count")
+def get_user_count():
+    try:
+        conn = get_db_connection()
+        row = conn.execute("SELECT COUNT(*) AS count FROM users").fetchone()
+        conn.close()
+        return {"count": row["count"]}
+    except sqlite3.Error as e:
+        raise HTTPException(status_code=500, detail=f"Database query error: {e}")
+       
 
 @app.get("/users/{user_id}")
 def get_user(user_id: int):
@@ -67,14 +79,3 @@ def get_user(user_id: int):
              status_code=500,
              detail=f"Database query error: {e}"
          )
-
-@app.get("/users/count")
-def get_user_count():
-    try:
-        conn = get_db_connection()
-        row = conn.execute("SELECT COUNT(*) AS count FROM users").fetchone()
-        conn.close()
-        return {"count": row["count"]}
-    except sqlite3.Error as e:
-        raise HTTPException(status_code=500, detail=f"Database query error: {e}")
-       
