@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException, Query
-from pydantic import EmailStr
+from pydantic import BaseModel, EmailStr
 import sqlite3
 
 app = FastAPI()
@@ -9,6 +9,10 @@ DB_PATH = "database.db"
  #   conn = sqlite3.connect("database.db")
   #  conn.row_factory = sqlite3.Row
    # return conn
+
+class UserCreate(BaseModel):
+    name: str
+    email: EmailStr
 
 def get_db_connection():
     try:
@@ -79,3 +83,31 @@ def get_user(user_id: int):
              status_code=500,
              detail=f"Database query error: {e}"
          )
+
+@app.post("/users", status_code=201)
+def create_user(payload: UserCreate):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "INSERT INTO users (name, email) VALUES (?, ?)",
+            (payload.name, str(payload.email)),
+        )
+        conn.commit()
+
+        user_id = cursor.lastrowid
+        user = conn.execute(
+            "SELECT * FROM users WHERE id = ?",
+            (user_id,),
+        ).fetchone()
+        conn.close()
+
+        return dict(user)
+    
+    except sqlite3.IntegrityError:
+        #useful if you later add UNIQUE(email)
+        raise HTTPException(status_code=409, detail="Email already exists")
+    
+    except sqlite3.Error as e:
+        raise HTTPException(status_code=500, detail=f"Database query error: {e}")
