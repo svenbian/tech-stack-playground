@@ -1,8 +1,15 @@
 from fastapi import FastAPI, HTTPException, Query
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, EmailStr
 import sqlite3
 
 app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+@app.get("/", include_in_schema=False)
+def index():
+    return FileResponse("static/index.html")
 DB_PATH = "database.db"
 
 #def get_db_connection():

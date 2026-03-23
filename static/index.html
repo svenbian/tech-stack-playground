@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API Playground</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+      color: #f8fafc;
+    }
+
+    .subtitle {
+      font-size: 0.85rem;
+      color: #64748b;
+      margin-bottom: 2rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .card {
+      background: #1e2330;
+      border: 1px solid #2d3348;
+      border-radius: 10px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .method {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      letter-spacing: 0.05em;
+    }
+
+    .get  { background: #0e4429; color: #3fb950; border: 1px solid #3fb950; }
+    .post { background: #2d1f00; color: #e3a008; border: 1px solid #e3a008; }
+    .delete { background: #3b0f0f; color: #f87171; border: 1px solid #f87171; }
+
+    .endpoint {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #94a3b8;
+      font-family: monospace;
+    }
+
+    label {
+      font-size: 0.78rem;
+      color: #94a3b8;
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    input {
+      width: 100%;
+      background: #0f1117;
+      border: 1px solid #2d3348;
+      border-radius: 6px;
+      padding: 0.5rem 0.7rem;
+      color: #e2e8f0;
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    input:focus { border-color: #6366f1; }
+
+    button {
+      background: #6366f1;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 0.5rem 1rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+      align-self: flex-start;
+    }
+
+    button:hover { background: #4f46e5; }
+
+    .result {
+      background: #0f1117;
+      border: 1px solid #2d3348;
+      border-radius: 6px;
+      padding: 0.75rem;
+      font-size: 0.78rem;
+      font-family: monospace;
+      white-space: pre-wrap;
+      word-break: break-all;
+      min-height: 48px;
+      color: #94a3b8;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .result.ok   { border-color: #3fb950; color: #3fb950; }
+    .result.err  { border-color: #f87171; color: #f87171; }
+
+    .status-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 4px;
+      float: right;
+    }
+
+    .status-2xx { background: #0e4429; color: #3fb950; }
+    .status-4xx { background: #3b0f0f; color: #f87171; }
+    .status-5xx { background: #3b1400; color: #fb923c; }
+  </style>
+</head>
+<body>
+
+<h1>API Playground</h1>
+<p class="subtitle">FastAPI + SQLite — interactive endpoint tester</p>
+
+<div class="grid">
+
+  <!-- Health -->
+  <div class="card">
+    <div class="card-header">
+      <span class="method get">GET</span>
+      <span class="endpoint">/health</span>
+    </div>
+    <button onclick="call('GET', '/health', null, 'r-health')">Send</button>
+    <div class="result" id="r-health">—</div>
+  </div>
+
+  <!-- User count -->
+  <div class="card">
+    <div class="card-header">
+      <span class="method get">GET</span>
+      <span class="endpoint">/users/count</span>
+    </div>
+    <button onclick="call('GET', '/users/count', null, 'r-count')">Send</button>
+    <div class="result" id="r-count">—</div>
+  </div>
+
+  <!-- List users -->
+  <div class="card">
+    <div class="card-header">
+      <span class="method get">GET</span>
+      <span class="endpoint">/users</span>
+    </div>
+    <button onclick="call('GET', '/users', null, 'r-list')">Send</button>
+    <div class="result" id="r-list">—</div>
+  </div>
+
+  <!-- Get user by ID -->
+  <div class="card">
+    <div class="card-header">
+      <span class="method get">GET</span>
+      <span class="endpoint">/users/{id}</span>
+    </div>
+    <div>
+      <label>User ID</label>
+      <input id="i-getid" type="number" placeholder="1" />
+    </div>
+    <button onclick="call('GET', `/users/${v('i-getid')}`, null, 'r-getid')">Send</button>
+    <div class="result" id="r-getid">—</div>
+  </div>
+
+  <!-- Search by email -->
+  <div class="card">
+    <div class="card-header">
+      <span class="method get">GET</span>
+      <span class="endpoint">/users/search</span>
+    </div>
+    <div>
+      <label>Email</label>
+      <input id="i-search" type="email" placeholder="user@example.com" />
+    </div>
+    <button onclick="call('GET', `/users/search?email=${encodeURIComponent(v('i-search'))}`, null, 'r-search')">Send</button>
+    <div class="result" id="r-search">—</div>
+  </div>
+
+  <!-- Create user -->
+  <div class="card">
+    <div class="card-header">
+      <span class="method post">POST</span>
+      <span class="endpoint">/users</span>
+    </div>
+    <div>
+      <label>Name</label>
+      <input id="i-name" type="text" placeholder="Jane Doe" />
+    </div>
+    <div>
+      <label>Email</label>
+      <input id="i-email" type="email" placeholder="jane@example.com" />
+    </div>
+    <button onclick="call('POST', '/users', {name: v('i-name'), email: v('i-email')}, 'r-create')">Send</button>
+    <div class="result" id="r-create">—</div>
+  </div>
+
+</div>
+
+<script>
+  const v = id => document.getElementById(id).value.trim();
+
+  async function call(method, url, body, resultId) {
+    const el = document.getElementById(resultId);
+    el.className = 'result';
+    el.textContent = 'Loading…';
+
+    try {
+      const opts = { method, headers: {} };
+      if (body) {
+        opts.headers['Content-Type'] = 'application/json';
+        opts.body = JSON.stringify(body);
+      }
+
+      const res = await fetch(url, opts);
+      const data = await res.json();
+
+      const statusClass = res.ok ? 'status-2xx' : res.status < 500 ? 'status-4xx' : 'status-5xx';
+      const badge = `<span class="status-badge ${statusClass}">${res.status}</span>`;
+
+      el.className = 'result ' + (res.ok ? 'ok' : 'err');
+      el.innerHTML = badge + '\n' + JSON.stringify(data, null, 2);
+    } catch (err) {
+      el.className = 'result err';
+      el.textContent = 'Error: ' + err.message;
+    }
+  }
+</script>
+
+</body>
+</html>
