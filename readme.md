@@ -34,3 +34,5 @@ Path vs query parameters
 HTTP status codes (200, 404, 422, 500)
 Error handling
 Route ordering in FastAPI
+## FocusForge (mobile app)
+The [`focusforge/`](focusforge/) folder contains a separate Expo / React Native project: a calm focus and distraction-blocking app. See [`focusforge/README.md`](focusforge/README.md).
