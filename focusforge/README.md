@@ -6,6 +6,7 @@ breaks, and watch your focus grow, without guilt.
 Built with **Expo SDK 57 · React Native 0.86 · TypeScript · Expo Router · Zustand**.
 
 - 📋 Product and technical plan: [`docs/PLAN.md`](docs/PLAN.md)
+- 📱 **Run it on your iPhone:** [`docs/IOS.md`](docs/IOS.md) (Expo Go, TestFlight or Xcode)
 - 🔐 How real device blocking works: [`docs/NATIVE_BLOCKING.md`](docs/NATIVE_BLOCKING.md)
 
 ## Features
@@ -28,8 +29,10 @@ Built with **Expo SDK 57 · React Native 0.86 · TypeScript · Expo Router · Zu
 ```bash
 cd focusforge
 npm install
-npx expo start          # then press i (iOS simulator), a (Android) or w (web)
+npx expo start          # scan the QR code with your iPhone camera (needs the Expo Go app)
 ```
+
+New to iOS development? Follow [`docs/IOS.md`](docs/IOS.md) step by step.
 
 Everything runs in **Expo Go** and on the **web**, because blocking is simulated. Open
 **Today → Try your shield** to tap apps on a pretend phone and see the block screen and limits in action.
@@ -51,6 +54,7 @@ src/
 │   ├── blocklist/[id] · schedule/[id] · limit/[id]   editors (id = "new" to create)
 │   ├── blocked.tsx       mindful block screen (shield)
 │   ├── simulator.tsx     pretend phone to try blocking
+│   ├── celebrate.tsx     gem celebration (transparent modal route)
 │   ├── allowlist.tsx · onboarding.tsx
 │   └── _layout.tsx       hydration gate, onboarding guard, background watchers
 ├── domain/         Pure TypeScript rules: session, schedule, blocking, stats, gems (+ tests)

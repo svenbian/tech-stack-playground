@@ -1,9 +1,8 @@
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import { DarkTheme, DefaultTheme, router, Stack, ThemeProvider, usePathname } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 
-import { CelebrationModal } from '@/components/CelebrationModal';
 import { useAppWatchers } from '@/hooks/useAppWatchers';
 import { useFocusStore } from '@/store/focusStore';
 import { useIsDark, useTheme } from '@/theme/useTheme';
@@ -13,6 +12,8 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 export default function RootLayout() {
   const hydrated = useFocusStore((s) => s.hydrated);
   const onboarded = useFocusStore((s) => s.settings.onboarded);
+  const celebrationCount = useFocusStore((s) => s.celebrationQueue.length);
+  const pathname = usePathname();
   const isDark = useIsDark();
   const t = useTheme();
 
@@ -22,6 +23,15 @@ export default function RootLayout() {
   useEffect(() => {
     if (hydrated) SplashScreen.hideAsync().catch(() => {});
   }, [hydrated]);
+
+  // A gem was just unlocked (the queue grew): present the celebration on top of
+  // whatever is showing. It's a route, so iOS can stack it over native modals.
+  const lastCount = useRef(0);
+  useEffect(() => {
+    const grew = celebrationCount > lastCount.current;
+    lastCount.current = celebrationCount;
+    if (hydrated && onboarded && grew && pathname !== '/celebrate') router.push('/celebrate');
+  }, [hydrated, onboarded, celebrationCount, pathname]);
 
   const navTheme = useMemo(() => {
     const base = isDark ? DarkTheme : DefaultTheme;
@@ -49,12 +59,15 @@ export default function RootLayout() {
           <Stack.Screen name="blocked" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
           <Stack.Screen name="simulator" />
           <Stack.Screen name="allowlist" options={{ presentation: 'modal' }} />
+          <Stack.Screen
+            name="celebrate"
+            options={{ presentation: 'transparentModal', animation: 'fade', contentStyle: { backgroundColor: 'transparent' } }}
+          />
         </Stack.Protected>
         <Stack.Protected guard={!onboarded}>
           <Stack.Screen name="onboarding" />
         </Stack.Protected>
       </Stack>
-      <CelebrationModal />
     </ThemeProvider>
   );
 }

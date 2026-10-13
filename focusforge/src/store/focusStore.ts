@@ -177,9 +177,10 @@ export const useFocusStore = create<FocusState>()(
             limits: input.withSampleData ? DEFAULT_LIMITS : [],
             ...history,
           });
-          // Sample history may already qualify for gems: unlock silently, no confetti for fake data.
+          // Anything already earned (sample history, a first schedule) unlocks quietly:
+          // the first screen after onboarding should be calm, not a pop-up.
           get().checkGems(now);
-          if (input.withSampleData) set({ celebrationQueue: [] });
+          set({ celebrationQueue: [] });
         },
 
         loadSampleData: () => {

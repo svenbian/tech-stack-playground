@@ -49,7 +49,9 @@ export function Screen({
         <ScrollView
           contentContainerStyle={[styles.content, contentStyle]}
           showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled">
+          keyboardShouldPersistTaps="handled"
+          // iOS: scroll content clear of the keyboard when a text field is focused.
+          automaticallyAdjustKeyboardInsets>
           {header}
           {children}
         </ScrollView>
