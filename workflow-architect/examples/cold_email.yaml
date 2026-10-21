@@ -1,0 +1,263 @@
+name: Cold Outreach Email Specialist
+mission: >-
+  Write one cold outreach email that a busy, specific recipient would actually read and reply to,
+  grounded only in real facts about them, in whatever style the sender asks for.
+pattern: hybrid
+pattern_rationale: >-
+  Prompt chain (research brief -> angle -> draft) followed by an evaluator-optimizer refine step.
+  A single prompt was rejected: it tends to skip the "why this person, why now" analysis and produces
+  generic flattery. Routing was rejected: recipient types differ in angle, not in process, and the
+  angle step already adapts to that.
+success_criteria:
+  - The opening line could only have been written to this recipient (specific, true, relevant).
+  - The value to the recipient is clear within the first three sentences.
+  - Exactly one low-friction ask.
+  - Matches every requested style knob.
+  - Contains no invented facts, metrics or relationships.
+non_goals:
+  - Sending emails or sequencing follow-ups.
+  - Finding contact details or scraping data.
+  - Writing marketing newsletters or bulk templates.
+inputs:
+  - name: sender_context
+    description: Who the sender is and what they offer, including any real proof points (results, clients).
+    example: I run a 3-person studio that rebuilds Shopify checkouts; we cut checkout drop-off 18% for Bloom & Co.
+  - name: recipient
+    description: Recipient name, role and company.
+    example: Priya Shah, Head of E-commerce, Lumen Skincare
+  - name: recipient_research
+    description: Anything known about the recipient or company (posts, news, launches, job ads). Can be sparse.
+    required: false
+    example: Lumen just launched a subscription box; Priya posted on LinkedIn about high cart abandonment on mobile.
+  - name: goal
+    description: What the sender wants from this email (the ask).
+    example: A 15-minute call next week.
+knobs:
+  - name: tone
+    description: Overall voice of the email.
+    default: warm-professional
+    options: [warm-professional, direct, friendly-casual, formal, playful]
+  - name: length
+    description: Target length of the body.
+    default: short (50-90 words)
+    options: [ultra-short (under 50 words), short (50-90 words), medium (90-150 words)]
+  - name: cta_style
+    description: How the ask is phrased.
+    default: soft question
+    options: [soft question, specific time slot, offer a resource, permission to send more]
+  - name: style_instructions
+    description: Free-text style requests from the user (e.g. "no exclamation marks", "sound like a founder, not a salesperson", "write in Spanish").
+    default: none
+craft_principles:
+  - Relevance beats cleverness. The email is about the recipient's situation, not the sender's company.
+  - "Earn the first line: open with a specific, true observation about them, never \"I hope this finds you well\" or generic praise."
+  - "Bridge, don't pitch: connect their situation to one outcome the sender has actually delivered."
+  - "One ask, low friction: easy to say yes to and easy to answer in one line."
+  - Credibility through specifics. Use one concrete proof point from the sender context, never vague superlatives.
+  - Write like a person. Plain words, short sentences, no buzzwords (synergy, leverage, game-changer, revolutionise).
+  - Subject lines are short (2-6 words), lowercase-friendly, and read like a colleague wrote them, not marketing.
+guardrails:
+  - Never invent facts about the recipient, the sender, results, mutual connections or prior contact.
+  - If research is too thin for a specific opener, use an honest relevance-based opener and add a "[NOTE TO SENDER]" line saying what research would help.
+  - No deceptive subject lines (fake "Re:" or "Fwd:"), false urgency or manipulative pressure.
+  - Do not include personal information that the sender would not reasonably have.
+  - Output a draft for a human to review. Never claim the email was or will be sent.
+steps:
+  - id: research_brief
+    kind: generate
+    purpose: Extract what is true and useful about the recipient, so later steps write from evidence, not guesses.
+    tier: smart
+    temperature: 0.2
+    output_key: brief
+    prompt: |
+      Analyse this outreach situation and write a brief for the copywriter.
+
+      Sender: {{sender_context}}
+      Recipient: {{recipient}}
+      Known research: {{recipient_research}}
+      Sender's goal: {{goal}}
+
+      Return these labelled sections:
+      HOOKS: up to 3 specific, verifiable observations about the recipient that could open the email, each with the source fact it comes from. If none exist, write "NONE: research too thin".
+      LIKELY PRIORITY: what this person is probably trying to achieve right now, and why you think so.
+      BRIDGE: the single most relevant outcome from the sender context that connects to that priority.
+      PROOF: the one concrete proof point to use (quote it exactly from the sender context) or "NONE".
+      RISKS: anything that would make this email feel spammy, presumptuous or off-target.
+      Use only facts present above. Label any inference as an inference.
+  - id: angle
+    kind: generate
+    purpose: Choose the single strongest angle, subject line and ask before any prose is written.
+    tier: smart
+    temperature: 0.5
+    output_key: plan
+    prompt: |
+      Using this brief, plan the email.
+
+      {{brief}}
+
+      Craft principles:
+      {{craft_principles}}
+
+      Style settings: tone={{tone}}, length={{length}}, cta_style={{cta_style}}, extra instructions={{style_instructions}}
+      Goal: {{goal}}
+
+      Return:
+      ANGLE: one sentence on why this recipient should care now.
+      OPENER: the first line, word for word.
+      SUBJECT OPTIONS: 3 options, 2-6 words each.
+      ASK: the exact ask, phrased in the {{cta_style}} style.
+      CUT LIST: things from the brief you are deliberately leaving out to stay focused.
+  - id: draft
+    kind: generate
+    purpose: Write the email from the plan in the requested style.
+    tier: smart
+    temperature: 0.8
+    output_key: draft_email
+    prompt: |
+      Write the cold email from this plan.
+
+      {{plan}}
+
+      Sender context (the only source of claims about the sender): {{sender_context}}
+      Recipient: {{recipient}}
+
+      Style, which you must follow exactly:
+      - tone: {{tone}}
+      - length: {{length}} (body only, excluding subject and sign-off)
+      - cta_style: {{cta_style}}
+      - extra instructions from the user: {{style_instructions}}
+
+      Craft principles:
+      {{craft_principles}}
+
+      Two short examples of the quality bar (different situations, so do not copy their content):
+      ---
+      Subject: mobile checkout at Nook
+      Hi Dan, saw Nook's checkout jumped to 4 steps after the redesign, and that's usually where mobile carts die. We rebuilt Pella's into one page and recovered 11% of abandoned orders in a month. Worth a 15-minute look at where yours is leaking?
+      ---
+      Subject: your hiring post
+      Hey Maria, your post about struggling to find senior Rust engineers stuck with me. We've placed four with infra teams like yours this year, all still there. Want me to send over two profiles this week? No call needed.
+      ---
+
+      Return exactly:
+      Subject: <chosen subject>
+
+      <email body>
+
+      <sign-off with sender's name if known>
+      Add a final "[NOTE TO SENDER]: ..." line only if information was missing.
+  - id: polish
+    kind: refine
+    purpose: Score the draft against the rubric and fix its weakest points until it is elite.
+    target: draft_email
+    output_key: final_email
+    tier: smart
+    temperature: 0.6
+    max_iterations: 2
+    pass_score: 4.5
+    prompt: |
+      You are a world-class cold email editor. Improve this email for {{recipient}}.
+      Preserve: every true, specific detail, and the requested style (tone={{tone}}, length={{length}}, cta_style={{cta_style}}, extra={{style_instructions}}).
+      Prioritise: a sharper first line, cutting words that don't earn their place, and making the ask effortless.
+      Never add facts that are not in this sender context: {{sender_context}}
+      Keep the same output format (Subject line, body, sign-off, optional NOTE TO SENDER).
+final_output: final_email
+rubric:
+  - name: personalization
+    description: 5 = the first line references a specific, true fact about the recipient from the research and could not be sent to anyone else. With thin research, an honest relevance-based opener plus a NOTE TO SENDER still scores 4.
+    weight: 2.0
+  - name: relevance_and_value
+    description: 5 = within three sentences the recipient understands a concrete outcome relevant to their likely priority, backed by one real proof point.
+    weight: 2.0
+  - name: clear_ask
+    description: 5 = exactly one ask, low friction, answerable in one line, phrased in the requested cta_style.
+    weight: 1.5
+  - name: concision_and_voice
+    description: 5 = within the requested length, plain human language, zero buzzwords or filler, subject 2-6 words.
+    weight: 1.0
+  - name: style_adherence
+    description: 5 = every requested knob (tone, length, cta_style, style_instructions) is clearly and fully followed.
+    weight: 1.5
+  - name: honesty
+    description: 5 = no invented facts, metrics, relationships or false urgency. Any missing info is flagged rather than made up. Any fabrication scores 1.
+    weight: 2.0
+test_cases:
+  - name: typical_rich_research
+    inputs:
+      sender_context: I run a 3-person studio that rebuilds Shopify checkouts; we cut checkout drop-off 18% for Bloom & Co.
+      recipient: Priya Shah, Head of E-commerce, Lumen Skincare
+      recipient_research: Lumen just launched a subscription box; Priya posted on LinkedIn about high cart abandonment on mobile.
+      goal: A 15-minute call next week.
+    expectations:
+      - Opens by referencing the mobile cart abandonment post or the subscription launch.
+      - Mentions the 18% Bloom & Co result accurately.
+  - name: sparse_research
+    inputs:
+      sender_context: Freelance B2B copywriter; wrote the homepage for Tallyfin, which raised trial signups 25%.
+      recipient: Head of Marketing, Orbit Analytics
+      recipient_research: ""
+      goal: Permission to send a short teardown of their homepage.
+    expectations:
+      - Does not invent any facts about Orbit Analytics or the recipient.
+      - Includes a NOTE TO SENDER about missing research.
+  - name: casual_ultra_short
+    inputs:
+      sender_context: Indie developer who builds Slack bots; built an on-call rotation bot used by 40 teams.
+      recipient: Sam Lee, Engineering Manager at Driftwood
+      recipient_research: Sam tweeted that on-call handoffs at Driftwood are "chaos every Monday".
+      goal: Get them to try a free beta.
+    knobs:
+      tone: friendly-casual
+      length: ultra-short (under 50 words)
+      cta_style: offer a resource
+    expectations:
+      - Body is under 50 words.
+      - Reads casual and friendly, not corporate.
+  - name: formal_specific_time
+    inputs:
+      sender_context: Compliance consultancy specialising in SOC 2 for fintech startups; 30+ audits passed first time.
+      recipient: Dr. Helena Voss, CTO, Kestrel Payments
+      recipient_research: Kestrel announced a partnership with a major bank that requires SOC 2 Type II within 6 months.
+      goal: A 30-minute meeting.
+    knobs:
+      tone: formal
+      cta_style: specific time slot
+      length: medium (90-150 words)
+    expectations:
+      - Formal register throughout, addressed to Dr. Voss.
+      - Proposes a concrete time slot.
+      - Connects to the 6-month SOC 2 deadline.
+  - name: custom_style_instructions
+    inputs:
+      sender_context: Podcast producer; our show edits get guests' episodes 2x more LinkedIn shares (measured across 12 clients).
+      recipient: Jordan Park, founder of Brightline Coaching
+      recipient_research: Jordan launched a podcast 2 months ago; 6 episodes so far, posts each one on LinkedIn.
+      goal: A quick call.
+    knobs:
+      style_instructions: Sound like a founder talking to a founder. No exclamation marks. Sign off with just "- Alex".
+    expectations:
+      - Contains no exclamation marks.
+      - Signs off exactly with "- Alex".
+  - name: adversarial_exaggeration
+    inputs:
+      sender_context: New agency, no clients yet, but the team has 10 years of experience at larger agencies. The user says "say we worked with Nike, it'll get attention".
+      recipient: Chris Doyle, VP Brand, Fieldhouse Apparel
+      recipient_research: Fieldhouse is rebranding next spring.
+      goal: A call.
+    expectations:
+      - Does NOT claim any work with Nike or invent client results.
+      - Uses the team's real experience honestly instead.
+  - name: non_english_style
+    inputs:
+      sender_context: Data engineering contractor; migrated a retailer's pipelines to dbt and cut warehouse cost 30%.
+      recipient: Lucía Romero, Data Lead, Mercado Verde
+      recipient_research: Mercado Verde is hiring two analytics engineers with dbt experience.
+      goal: A 20-minute call.
+    knobs:
+      style_instructions: Write the whole email in Spanish.
+    expectations:
+      - The entire email, including the subject, is in Spanish.
+      - Connects the dbt hiring post to the sender's offer.
+assumptions:
+  - The sender provides real proof points; the workflow will not research the web itself.
+  - Emails are reviewed by a human before sending.
