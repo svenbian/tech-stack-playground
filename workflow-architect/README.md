@@ -18,6 +18,14 @@ You then test it in Gemini and paste results back. The architect diagnoses the w
 3. Under **Project knowledge**, upload all six files in [`project/knowledge/`](project/knowledge/).
 4. Start a chat in the project: *"Make me a Gem that's elite at writing cold outreach emails, but flexible on style."*
 
+## Or run it in Gemini, as a skill
+The same architect is packaged as a Gemini skill in [`gemini-skill/skill-architect/`](gemini-skill/skill-architect/).
+1. Download [`gemini-skill/skill-architect.zip`](gemini-skill/skill-architect.zip).
+2. In Gemini, go to **Settings → Skills** and upload the ZIP.
+3. In any chat, type `/skill-architect make me a skill that's elite at cold outreach emails`.
+
+The skill delivers Gemini skills by default, and a Gem version only if you ask for one.
+
 ## How the architect works
 ```
 Mode A: new build   intake (≤5 questions with defaults) → design brief → build files → self-review → deliver
